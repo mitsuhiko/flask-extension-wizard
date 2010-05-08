@@ -1,0 +1,18 @@
+Flask Extension Wizard
+======================
+
+A script that can generate Flask Extensions.  Just make sure to
+have Flask installed before running that script.  It will prompt
+you for a few things and then generate the basic stuff for you.
+
+For Sphinx and git support, Sphinx and git have to be available.
+
+Installation with a fresh virtualenv:
+
+$ virtualenv env
+$ env/bin/activate
+$ easy_install Flask Sphinx
+$ wget http://bit.ly/flask-extension-wizard
+$ python make_flaskext.py
+
+Then follow the instructions.

@@ -81,9 +81,15 @@ Links
 `````
 
 * `documentation <http://packages.python.org/{{ urlname }}>`_
-{% if with_git -%}
+{% if vcs_host in ('github', 'gitorious', 'bitbucket') -%}
 * `development version
+{%- if vcs_host == 'github' %}
   <http://github.com/USERNAME/REPOSITORY/zipball/master#egg={{ urlname }}-dev>`_
+{%- elif vcs_host == 'gitorious' %}
+  <http://gitorious.org/PROJECT/REPOSITORY/archive-tarball/master#egg={{ urlname }}-dev>`_
+{%- elif vcs_host == 'bitbucket' %}
+  <http://bitbucket.org/USERNAME/REPOSITORY/get/tip.gz#egg={{ urlname }}-dev`_
+{% endif %}
 {% endif %}
 """
 from setuptools import setup
@@ -122,7 +128,7 @@ setup(
 def prompt(name, default=None):
     prompt = name + (default and ' [%s]' % default or '')
     prompt += name.endswith('?') and ' ' or ': '
-    while 1:
+    while True:
         rv = raw_input(prompt)
         if rv:
             return rv
@@ -131,7 +137,7 @@ def prompt(name, default=None):
 
 
 def prompt_bool(name, default=False):
-    while 1:
+    while True:
         rv = prompt(name + '?', default and 'Y' or 'N')
         if not rv:
             return default
@@ -139,6 +145,19 @@ def prompt_bool(name, default=False):
             return True
         elif rv.lower() in ('n', 'no', '0', 'off', 'false', 'f'):
             return False
+
+
+def prompt_choices(name, choices):
+    while True:
+        rv = prompt(name + '? - (%s)' % ', '.join(choices), choices[0])
+        rv = rv.lower()
+        if not rv:
+            return choices[0]
+        if rv in choices:
+            if rv == 'none':
+                return None
+            else:
+                return rv
 
 
 def guess_package(name):
@@ -150,13 +169,14 @@ def guess_package(name):
 
 class Extension(object):
 
-    def __init__(self, name, shortname, author, output_folder, with_git,
+    def __init__(self, name, shortname, author, output_folder, vcs, vcs_host,
                  with_sphinx, sphinx_theme):
         self.name = name
         self.shortname = shortname
         self.author = author
         self.output_folder = output_folder
-        self.with_git = with_git
+        self.vcs = vcs
+        self.vcs_host = vcs_host
         self.with_sphinx = with_sphinx
         self.sphinx_theme = sphinx_theme
 
@@ -188,15 +208,23 @@ class Extension(object):
                 urlname=url_quote(self.name),
                 package='flaskext.' + self.shortname,
                 author=self.author,
-                with_git=self.with_git
+                vcs_host=self.vcs_host
             ).encode('utf-8') + '\n')
 
+    def init_vcs(self):
+        if self.vcs == 'hg':
+            self.init_hg()
+        elif self.vcs == 'git':
+            self.init_git()
+
+    def init_hg(self):
+        Popen(['hg', 'init'], cwd=self.output_folder).wait()
+
     def init_git(self):
-        if not self.with_git:
-            return
         Popen(['git', 'init'], cwd=self.output_folder).wait()
-        Popen(['git', 'submodule', 'add', SPHINX_THEME_REPO, 'docs/_themes'],
-              cwd=self.output_folder).wait()
+        if self.with_sphinx:
+            Popen(['git', 'submodule', 'add', SPHINX_THEME_REPO,
+                   'docs/_themes'], cwd=self.output_folder).wait()
 
     def init_sphinx(self):
         if not self.with_sphinx:
@@ -217,7 +245,7 @@ class Extension(object):
                     config[idx] = "#pygments_style = 'sphinx'"
         with open(os.path.join(docdir, 'conf.py'), 'w') as f:
             f.write('\n'.join(config))
-        if not self.with_git:
+        if not self.vcs == 'git':
             print 'Don\'t forget to put the sphinx themes into docs/_themes!'
 
 
@@ -241,7 +269,15 @@ def main():
     sphinx_theme = None
     if use_sphinx:
         sphinx_theme = prompt('Sphinx theme to use', default='flask_small')
-    use_git = prompt_bool('Initialize git repository', default=True)
+    vcs = prompt_choices('Which VCS to use', ('none', 'git', 'hg'))
+    if vcs is None:
+        vcs_host = None
+    elif vcs == 'git':
+        vcs_host = prompt_choices('Which git host to use',
+                                  ('none', 'github', 'gitorious'))
+    elif vcs == 'hg':
+        vcs_host = prompt_choices('Which Mercurial host to use',
+                                  ('none', 'bitbucket'))
 
     output_folder = len(sys.argv) == 2 and sys.argv[1] or ('flask-%s' % shortname)
     while 1:
@@ -255,12 +291,12 @@ def main():
             break
     output_folder = os.path.abspath(folder)
 
-    ext = Extension(name, shortname, author, output_folder, use_git,
+    ext = Extension(name, shortname, author, output_folder, vcs, vcs_host,
                     use_sphinx, sphinx_theme)
     ext.make_folder()
     ext.create_files()
     ext.init_sphinx()
-    ext.init_git()
+    ext.init_vcs()
 
 
 if __name__ == '__main__':

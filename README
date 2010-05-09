@@ -5,7 +5,17 @@ A script that can generate Flask Extensions.  Just make sure to
 have Flask installed before running that script.  It will prompt
 you for a few things and then generate the basic stuff for you.
 
-For Sphinx and git support, Sphinx and git have to be available.
+If you have Sphinx installed, it can create Sphinx documentation.
+(It will automatically set up the Sphinx themes as a Git submodule
+if you are using Git.)
+
+If you have Git or Mercurial installed, it can initialize a
+repository, and add a link to the development version if you plan
+to host it on Github, Gitorious, or Bitbucket.
+
+By default, extensions are listed as BSD licensed, but you can
+select the MIT license or use a different license by selecting
+"none" when the wizard asks.
 
 Installation with a fresh virtualenv:
 

@@ -95,6 +95,7 @@ setup(
     url='<enter URL here>',
     license='BSD',
     author={{ author|pprint }},
+    author_email='your-email-here@example.com',
     description='<enter short description here>',
     long_description=__doc__,
     packages=['flaskext'],

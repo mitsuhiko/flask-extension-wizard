@@ -36,6 +36,30 @@ FILE_HEADER_TEMPLATE = Template(u'''\
     :license: BSD, see LICENSE for more details.
 """
 ''')
+MIT_LICENSE_TEMPLATE = Template(u'''\
+Copyright (c) {{ year }} {{ name }}
+
+Permission is hereby granted, free of charge, to any person
+obtaining a copy of this software and associated documentation
+files (the "Software"), to deal in the Software without
+restriction, including without limitation the rights to use,
+copy, modify, merge, publish, distribute, sublicense, and/or sell
+copies of the Software, and to permit persons to whom the
+Software is furnished to do so, subject to the following
+conditions:
+
+The above copyright notice and this permission notice shall be
+included in all copies or substantial portions of the Software.
+
+THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND,
+EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES
+OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND
+NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT
+HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY,
+WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING
+FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR
+OTHER DEALINGS IN THE SOFTWARE.
+''')
 BSD_LICENSE_TEMPLATE = Template(u'''\
 Copyright (c) {{ year }} by {{ name }}.
 
@@ -99,7 +123,7 @@ setup(
     name={{ name|pprint }},
     version='0.1',
     url='<enter URL here>',
-    license='BSD',
+    license={{ license|pprint }},
     author={{ author|pprint }},
     author_email='your-email-here@example.com',
     description='<enter short description here>',
@@ -115,7 +139,9 @@ setup(
         'Development Status :: 4 - Beta',
         'Environment :: Web Environment',
         'Intended Audience :: Developers',
-        'License :: OSI Approved :: BSD License',
+{%- if license %}
+        'License :: OSI Approved :: {{ license }} License',
+{%- endif %}
         'Operating System :: OS Independent',
         'Programming Language :: Python',
         'Topic :: Internet :: WWW/HTTP :: Dynamic Content',
@@ -170,13 +196,14 @@ def guess_package(name):
 class Extension(object):
 
     def __init__(self, name, shortname, author, output_folder, vcs, vcs_host,
-                 with_sphinx, sphinx_theme):
+                 license, with_sphinx, sphinx_theme):
         self.name = name
         self.shortname = shortname
         self.author = author
         self.output_folder = output_folder
         self.vcs = vcs
         self.vcs_host = vcs_host
+        self.license = license
         self.with_sphinx = with_sphinx
         self.sphinx_theme = sphinx_theme
 
@@ -196,10 +223,16 @@ class Extension(object):
                 name=self.author
             ).encode('utf-8') + '\n')
         with open(os.path.join(self.output_folder, 'LICENSE'), 'w') as f:
-            f.write(BSD_LICENSE_TEMPLATE.render(
-                year=datetime.utcnow().year,
-                name=self.author
-            ).encode('utf-8') + '\n')
+            if self.license == 'BSD':
+                f.write(BSD_LICENSE_TEMPLATE.render(
+                    year=datetime.utcnow().year,
+                    name=self.author
+                ).encode('utf-8') + '\n')
+            elif self.license == 'MIT':
+                f.write(MIT_LICENSE_TEMPLATE.render(
+                    year=datetime.utcnow().year,
+                    name=self.author
+                ).encode('utf-8') + '\n')
         with open(os.path.join(self.output_folder, 'README'), 'w') as f:
             f.write(self.name + '\n\nDescription goes here\n')
         with open(os.path.join(self.output_folder, 'setup.py'), 'w') as f:
@@ -208,7 +241,8 @@ class Extension(object):
                 urlname=url_quote(self.name),
                 package='flaskext.' + self.shortname,
                 author=self.author,
-                vcs_host=self.vcs_host
+                vcs_host=self.vcs_host,
+                license=self.license
             ).encode('utf-8') + '\n')
 
     def init_vcs(self):
@@ -265,6 +299,13 @@ def main():
             break
     shortname = prompt('Shortname (without flaskext.)', default=guess_package(name))
     author = prompt('Author', default=getpass.getuser())
+    license_rv = prompt_choices('License', ('bsd', 'mit', 'none'))
+    if license_rv == 'bsd':
+        license = 'BSD'
+    elif license_rv == 'mit':
+        license = 'MIT'
+    else:
+        license = None
     use_sphinx = prompt_bool('Create sphinx documentation', default=True)
     sphinx_theme = None
     if use_sphinx:
@@ -292,7 +333,7 @@ def main():
     output_folder = os.path.abspath(folder)
 
     ext = Extension(name, shortname, author, output_folder, vcs, vcs_host,
-                    use_sphinx, sphinx_theme)
+                    license, use_sphinx, sphinx_theme)
     ext.make_folder()
     ext.create_files()
     ext.init_sphinx()

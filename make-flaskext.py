@@ -80,7 +80,7 @@ Description goes here...
 Links
 `````
 
-* `documentation <http://packages.python.org/{{ urlname }}`_
+* `documentation <http://packages.python.org/{{ urlname }}>`_
 {% if with_git -%}
 * `development version
   <http://github.com/USERNAME/REPOSITORY/zipball/master#egg={{ urlname }}-dev>`_

@@ -266,7 +266,11 @@ class Extension(object):
         docdir = os.path.join(self.output_folder, 'docs')
         os.makedirs(docdir)
         Popen(['sphinx-quickstart'], cwd=docdir).wait()
-        with open(os.path.join(docdir, 'conf.py'), 'r') as f:
+        if os.path.isfile(os.path.join(docdir, 'source', 'conf.py')):
+            sphinx_conf_py = os.path.join(docdir, 'source', 'conf.py')
+        else:
+            sphinx_conf_py = os.path.join(docdir, 'conf.py')
+        with open(sphinx_conf_py, 'r') as f:
             config = f.read().splitlines()
             for idx, line in enumerate(config):
                 if line.startswith('#sys.path.append'):
@@ -277,7 +281,7 @@ class Extension(object):
                     config[idx] = "html_theme_path = ['_themes']"
                 elif line.startswith('pygments_style ='):
                     config[idx] = "#pygments_style = 'sphinx'"
-        with open(os.path.join(docdir, 'conf.py'), 'w') as f:
+        with open(sphinx_conf_py, 'w') as f:
             f.write('\n'.join(config))
         if not self.vcs == 'git':
             print 'Don\'t forget to put the sphinx themes into docs/_themes!'

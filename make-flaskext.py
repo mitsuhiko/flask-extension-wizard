@@ -112,7 +112,7 @@ Links
 {%- elif vcs_host == 'gitorious' %}
   <http://gitorious.org/PROJECT/REPOSITORY/archive-tarball/master#egg={{ urlname }}-dev>`_
 {%- elif vcs_host == 'bitbucket' %}
-  <http://bitbucket.org/USERNAME/REPOSITORY/get/tip.gz#egg={{ urlname }}-dev`_
+  <http://bitbucket.org/USERNAME/REPOSITORY/get/tip.gz#egg={{ urlname }}-dev>`_
 {% endif %}
 {% endif %}
 """

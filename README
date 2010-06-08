@@ -20,9 +20,9 @@ select the MIT license or use a different license by selecting
 Installation with a fresh virtualenv:
 
 $ virtualenv env
-$ env/bin/activate
+$ . env/bin/activate
 $ easy_install Flask Sphinx
 $ wget http://bit.ly/flask-extension-wizard
-$ python make_flaskext.py
+$ python make-flaskext.py
 
 Then follow the instructions.

@@ -33,7 +33,7 @@ FILE_HEADER_TEMPLATE = Template(u'''\
     Description of the module goes here...
 
     :copyright: (c) {{ year }} by {{ name }}.
-    :license: BSD, see LICENSE for more details.
+    :license: {{ license }}, see LICENSE for more details.
 """
 ''')
 MIT_LICENSE_TEMPLATE = Template(u'''\
@@ -220,7 +220,8 @@ class Extension(object):
             f.write(FILE_HEADER_TEMPLATE.render(
                 module='flaskext.' + self.shortname,
                 year=datetime.utcnow().year,
-                name=self.author
+                name=self.author,
+                license=self.license
             ).encode('utf-8') + '\n')
         with open(os.path.join(self.output_folder, 'LICENSE'), 'w') as f:
             if self.license == 'BSD':
